@@ -1,8 +1,12 @@
 #cuda==10.1
-numba==0.48
-numpy==1.17.0
-SoundFile
+#numba==0.48
+numpy~=2.2.6
+SoundFile~=0.13.1
 librosa==0.7.2
-pyyaml==5.4
+#pyyaml==5.4
+pyyaml>=6.0
 tensorboardX==2.1
-matplotlib==3.0.2
+#matplotlib>=3.0.2
+
+torch~=2.9.1
+joblib~=1.5.2
