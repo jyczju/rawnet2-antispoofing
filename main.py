@@ -12,7 +12,7 @@ from torch import nn
 from model import RawNet
 from tensorboardX import SummaryWriter
 
-
+from tqdm import tqdm
 
 
 def keras_lr_decay(step, decay = 0.0001):
@@ -105,7 +105,8 @@ def train_epoch(data_loader, model, lr,optim, device):
     weight = torch.FloatTensor([1.0, 9.0]).to(device)
     criterion = nn.CrossEntropyLoss(weight=weight)
     
-    for batch_x, batch_y, batch_meta in train_loader:
+    # for batch_x, batch_y, batch_meta in data_loader:
+    for batch_x, batch_y, batch_meta in tqdm(data_loader, desc=f'Training Epoch', leave=False):
        
         batch_size = batch_x.size(0)
         num_total += batch_size
@@ -117,9 +118,9 @@ def train_epoch(data_loader, model, lr,optim, device):
         _, batch_pred = batch_out.max(dim=1)
         num_correct += (batch_pred == batch_y).sum(dim=0).item()
         running_loss += (batch_loss.item() * batch_size)
-        if ii % 10 == 0:
-            sys.stdout.write('\r \t {:.2f}'.format(
-                (num_correct/num_total)*100))
+        # if ii % 10 == 0:
+        #     sys.stdout.write('\r \t {:.2f}'.format(
+        #         (num_correct/num_total)*100))
         optim.zero_grad()
         batch_loss.backward()
         optim.step()
@@ -138,8 +139,8 @@ if __name__ == '__main__':
     parser.add_argument('--model_path', type=str,
                         default=None, help='Model checkpoint')
    
-    parser.add_argument('--database_path', type=str, default='/your/path/to/data/ASVspoof_database/', help='change this to user\'s full directory address of LA database')
-    parser.add_argument('--protocols_path', type=str, default='database/ASVspoof2019_LA_cm_protocols/', help='Change with path to user\'s LA database protocols directory address')
+    parser.add_argument('--database_path', type=str, default='database/LA', help='change this to user\'s full directory address of LA database')
+    parser.add_argument('--protocols_path', type=str, default='database/LA/ASVspoof2019_LA_cm_protocols', help='Change with path to user\'s LA database protocols directory address')
     parser.add_argument('--eval_output', type=str, default=None,
                         help='Path to save the evaluation result')
     parser.add_argument('--batch_size', type=int, default=32)
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     dir_yaml = os.path.splitext('model_config_RawNet2')[0] + '.yaml'
 
     with open(dir_yaml, 'r') as f_yaml:
-            parser1 = yaml.load(f_yaml)
+            parser1 = yaml.load(f_yaml,Loader=yaml.FullLoader)
 
     
     np.random.seed(parser1['seed'])
@@ -193,7 +194,8 @@ if __name__ == '__main__':
     ])
 
     # GPU device
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'                  # cuda-0
+    device = 'mps' if torch.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu'
+    print('Using {} device'.format(device))
     
     
 

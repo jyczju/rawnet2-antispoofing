@@ -5,6 +5,7 @@ import soundfile as sf
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from joblib import Parallel, delayed
+from tqdm import tqdm
 
 
 ASVFile = collections.namedtuple('ASVFile',
@@ -94,7 +95,7 @@ class ASVDataset(Dataset):
         self.transform = transform
 
         if os.path.exists(self.cache_fname):
-            self.data_x, self.data_y, self.data_sysid, self.files_meta = torch.load(self.cache_fname)
+            self.data_x, self.data_y, self.data_sysid, self.files_meta = torch.load(self.cache_fname, weights_only=False)
             print('Dataset loaded from cache ', self.cache_fname)
         else:
             self.files_meta = self.parse_protocols_file(self.protocols_fname)
@@ -102,7 +103,16 @@ class ASVDataset(Dataset):
             self.data_x, self.data_y, self.data_sysid = map(list, zip(*data))
             
             if self.transform:
-                self.data_x = Parallel(n_jobs=4, prefer='threads')(delayed(self.transform)(x) for x in self.data_x)
+                # self.data_x = Parallel(n_jobs=4, prefer='threads')(delayed(self.transform)(x) for x in self.data_x)
+
+                print("Applying transformations...")
+                transformed_data = []
+                with Parallel(n_jobs=4, prefer='threads') as parallel:
+                    # 创建任务迭代器并添加进度条
+                    tasks = (delayed(self.transform)(x) for x in self.data_x)
+                    transformed_data = list(tqdm(parallel(tasks), total=len(self.data_x), desc="Transforming"))
+                self.data_x = transformed_data
+                print("Transformation completed.")
             torch.save((self.data_x, self.data_y, self.data_sysid, self.files_meta), self.cache_fname)
             
         if sample_size:
