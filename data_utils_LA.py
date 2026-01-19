@@ -88,7 +88,7 @@ class ASVDataset(Dataset):
             'ASVspoof2019.{}.cm.{}.txt'.format(track, self.protocols_fname))
         print('protocols_file',self.protocols_fname)
 
-        self.cache_fname = 'cache_{}_{}_{}.npy'.format(self.dset_name,track,feature_name)
+        self.cache_fname = 'cache/cache_{}_{}_{}.npy'.format(self.dset_name,track,feature_name)
         print('cache_fname',self.cache_fname)
         
         
@@ -105,15 +105,11 @@ class ASVDataset(Dataset):
             if self.transform:
                 # self.data_x = Parallel(n_jobs=4, prefer='threads')(delayed(self.transform)(x) for x in self.data_x)
 
-                print("Applying transformations...")
-                transformed_data = []
-                with Parallel(n_jobs=4, prefer='threads') as parallel:
-                    # 创建任务迭代器并添加进度条
-                    tasks = (delayed(self.transform)(x) for x in self.data_x)
-                    transformed_data = list(tqdm(parallel(tasks), total=len(self.data_x), desc="Transforming"))
-                self.data_x = transformed_data
-                print("Transformation completed.")
+                self.data_x = Parallel(n_jobs=4, prefer='threads')(
+                    delayed(self.transform)(x) for x in tqdm(self.data_x, desc="Transforming")
+                )
             torch.save((self.data_x, self.data_y, self.data_sysid, self.files_meta), self.cache_fname)
+            print('Dataset saved to cache ', self.cache_fname)
             
         if sample_size:
             select_idx = np.random.choice(len(self.files_meta), size=(sample_size,), replace=True).astype(np.int32)

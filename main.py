@@ -70,7 +70,7 @@ def produce_evaluation_file(dataset, model, device, save_path):
     sys_id_list = []
     key_list = []
     score_list = []
-    for batch_x, batch_y, batch_meta in data_loader:
+    for batch_x, batch_y, batch_meta in tqdm(data_loader, desc=f'Evaluating eval_set', leave=False):
         batch_size = batch_x.size(0)
         num_total += batch_size
         batch_x = batch_x.to(device)
@@ -229,13 +229,14 @@ if __name__ == '__main__':
     
     
     if args.model_path:
+        print('Loading model from {}'.format(args.model_path))
         model.load_state_dict(torch.load(args.model_path,map_location=device))
         print('Model loaded : {}'.format(args.model_path))
 
     
 
     if args.eval:
-        
+        print('Evaluation mode')
         produce_evaluation_file(dev_set, model, device, args.eval_output)
         sys.exit(0)
 

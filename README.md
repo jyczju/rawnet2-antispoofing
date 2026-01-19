@@ -22,7 +22,7 @@ Our model for the logical access (LA) track is trained on the LA train partition
 ### Training
 To train the model run:
 ```
-python main.py --track=logical --loss=CCE   --lr=0.0001 --batch_size=32
+python main.py --track=logical --loss=CCE   --lr=0.0001 --batch_size=16
 ```
 
 ```
@@ -34,7 +34,7 @@ tensorboard --logdir=logs/model_logical_CCE_100_16_0.0001
 To test your own model on the ASVspoof 2019 LA evaluation set:
 
 ```
-python main.py --track=logical --loss=CCE --is_eval --eval --model_path='/path/to/your/your_best_model.pth' --eval_output='eval_CM_scores.txt'
+python main.py --track=logical --loss=CCE --is_eval --eval --model_path='models/model_logical_CCE_100_16_0.0001/best.pth' --eval_output='eval_CM_scores.txt'
 ```
 
 If you would like to compute scores on the development set of ASVspoof 2019 simply run:

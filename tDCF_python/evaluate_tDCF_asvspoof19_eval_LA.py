@@ -7,12 +7,12 @@ args = sys.argv
 
 if 'dev'==args[1]:
     
-    ASV_SCOREFILE = '/tDCF_python/ASV_scores/ASVspoof2019.LA.asv.dev.gi.trl.scores.txt''
+    ASV_SCOREFILE = './tDCF_python/ASV_scores/ASVspoof2019.LA.asv.dev.gi.trl.scores.txt'
     CM_SCOREFILE = args[2]
     
      
 elif 'Eval'==args[1]:
-    ASV_SCOREFILE = '/tDCF_python/ASV_scores/ASVspoof2019.LA.asv.eval.gi.trl.scores.txt''
+    ASV_SCOREFILE = './tDCF_python/ASV_scores/ASVspoof2019.LA.asv.eval.gi.trl.scores.txt'
     CM_SCOREFILE = args[2]
      
 
@@ -40,14 +40,14 @@ cost_model = {
 asv_data = np.genfromtxt(asv_score_file, dtype=str)
 asv_sources = asv_data[:, 0]
 asv_keys = asv_data[:, 1]
-asv_scores = asv_data[:, 2].astype(np.float)
+asv_scores = asv_data[:, 2].astype(float)
 
 # Load CM scores
 cm_data = np.genfromtxt(cm_scores_file, dtype=str)
 cm_utt_id = cm_data[:, 0]
 cm_sources = cm_data[:, 1]
 cm_keys = cm_data[:, 2]
-cm_scores = cm_data[:, 3].astype(np.float)
+cm_scores = cm_data[:, 3].astype(float)
 
 # Extract target, nontarget, and spoof scores from the ASV scores
 tar_asv = asv_scores[asv_keys == 'target']
@@ -73,6 +73,18 @@ tDCF_curve, CM_thresholds = em.compute_tDCF(bona_cm, spoof_cm, Pfa_asv, Pmiss_as
 min_tDCF_index = np.argmin(tDCF_curve)
 min_tDCF = tDCF_curve[min_tDCF_index]
 
+# Calculate CM accuracy
+total_bona = len(bona_cm)
+total_spoof = len(spoof_cm)
+total_samples = total_bona + total_spoof
+
+# Assuming threshold-based classification
+cm_threshold = CM_thresholds[min_tDCF_index]  # 或使用其他阈值确定方法
+tp_bona = np.sum(bona_cm >= cm_threshold)  # 正确识别的真实样本
+tn_spoof = np.sum(spoof_cm < cm_threshold)  # 正确识别的伪造样本
+correct_predictions = tp_bona + tn_spoof
+
+cm_accuracy = correct_predictions / total_samples
 
 print('ASV SYSTEM')
 print('   EER            = {:8.5f} % (Equal error rate (target vs. nontarget discrimination)'.format(eer_asv * 100))
@@ -82,6 +94,7 @@ print('   1-Pmiss,spoof  = {:8.5f} % (Spoof false acceptance rate)'.format((1 - 
 
 print('\nCM SYSTEM')
 print('   EER            = {:8.9f} % (Equal error rate for countermeasure)'.format(eer_cm * 100))
+print('   ACC            = {:8.9f} % (Accuracy for countermeasure)'.format(cm_accuracy * 100))
 
 print('\nTANDEM')
 print('   min-tDCF       = {:8.9f}'.format(min_tDCF))
