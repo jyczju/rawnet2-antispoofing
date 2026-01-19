@@ -25,6 +25,10 @@ To train the model run:
 python main.py --track=logical --loss=CCE   --lr=0.0001 --batch_size=32
 ```
 
+```
+tensorboard --logdir=logs/model_logical_CCE_100_16_0.0001
+```
+
 ### Testing
 
 To test your own model on the ASVspoof 2019 LA evaluation set:

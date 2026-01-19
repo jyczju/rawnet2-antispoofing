@@ -47,7 +47,7 @@ def evaluate_accuracy(data_loader, model, device):
     num_correct = 0.0
     num_total = 0.0
     model.eval()
-    for batch_x, batch_y, batch_meta in data_loader:
+    for batch_x, batch_y, batch_meta in tqdm(data_loader, desc=f'Evaluating Acc', leave=False):
         
         batch_size = batch_x.size(0)
         num_total += batch_size
@@ -258,7 +258,7 @@ if __name__ == '__main__':
         writer.add_scalar('train_accuracy', train_accuracy, epoch)
         writer.add_scalar('valid_accuracy', valid_accuracy, epoch)
         writer.add_scalar('loss', running_loss, epoch)
-        print('\n{} - {} - {:.2f} - {:.2f}'.format(epoch,
+        print('\nepoch {} - running_loss {} - train_accuracy {:.2f} - valid_accuracy {:.2f}'.format(epoch,
                                                    running_loss, train_accuracy, valid_accuracy))
         print('*'*50)
         print('dev_acc %f', valid_accuracy)
