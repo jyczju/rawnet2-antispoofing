@@ -106,7 +106,8 @@ def train_epoch(data_loader, model, lr,optim, device):
     criterion = nn.CrossEntropyLoss(weight=weight)
     
     # for batch_x, batch_y, batch_meta in data_loader:
-    for batch_x, batch_y, batch_meta in tqdm(data_loader, desc=f'Training Epoch', leave=False):
+    progress_bar = tqdm(data_loader, desc=f'Training Epoch', leave=False)
+    for batch_x, batch_y, batch_meta in progress_bar:
        
         batch_size = batch_x.size(0)
         num_total += batch_size
@@ -118,9 +119,15 @@ def train_epoch(data_loader, model, lr,optim, device):
         _, batch_pred = batch_out.max(dim=1)
         num_correct += (batch_pred == batch_y).sum(dim=0).item()
         running_loss += (batch_loss.item() * batch_size)
-        # if ii % 10 == 0:
-        #     sys.stdout.write('\r \t {:.2f}'.format(
-        #         (num_correct/num_total)*100))
+        if ii % 10 == 0:
+            # sys.stdout.write('\r \t {:.2f}'.format(
+            #     (num_correct/num_total)*100))
+            current_accuracy = (num_correct / num_total) * 100
+            progress_bar.set_postfix({
+                'Acc': f'{current_accuracy:.2f}%',
+                'Loss': f'{running_loss / num_total:.4f}'
+            })
+
         optim.zero_grad()
         batch_loss.backward()
         optim.step()
