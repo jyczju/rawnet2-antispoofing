@@ -20,23 +20,7 @@ def pad(x, sample_rate, max_len=64600, atk_amp=None, atk_f=None, show_plot=True)
         num_repeats = int(max_len / x_len)+1
         x = np.tile(x, (1, num_repeats))[:, :max_len][0]
 
-    # 归一化
-    x = x / np.max(np.abs(x))
 
-    # 如果是攻击，则在已有音频上叠加幅值为atk_amp、频率为atk_f的正弦波
-    if atk_amp is not None and atk_f is not None:
-        x = x + atk_amp * np.sin(2 * np.pi * atk_f * np.arange(x.shape[0]) / sample_rate)
-
-    if show_plot:
-        # 绘制音频波形图和时间频谱图在同一张图上
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-        librosa.display.waveshow(x, sr=sample_rate, ax=ax1)
-        ax1.set_title('Waveform')
-        librosa.display.specshow(librosa.amplitude_to_db(np.abs(librosa.stft(x)), ref=np.max),
-                                 sr=sample_rate, x_axis='time', y_axis='log', ax=ax2)
-        ax2.set_title('Spectrogram')
-        plt.tight_layout()
-        plt.show()
     
     return x
 
@@ -58,16 +42,34 @@ def load_model(model_path, config_path, device):
     return model
 
 
-def load_audio(audio_path):
-    data, samplerate = sf.read(audio_path)
-    print('samplerate:',samplerate)
-    return data, samplerate
-
-
-def judge_spoof(model, audio_data,sr, device):
+def load_audio(audio_path, atk_amp=None, atk_f=None, show_plot=True):
+    data, sample_rate = sf.read(audio_path)
+    # print('samplerate:',samplerate)
     # Apply transforms
-    transformed_data = pad(audio_data,sr)
-    tensor_data = Tensor(transformed_data)
+    x = pad(data, sample_rate)
+
+    # 归一化
+    x = x / np.max(np.abs(x))
+
+    # 如果是攻击，则在已有音频上叠加幅值为atk_amp、频率为atk_f的正弦波
+    if atk_amp is not None and atk_f is not None:
+        x = x + atk_amp * np.sin(2 * np.pi * atk_f * np.arange(x.shape[0]) / sample_rate)
+
+    if show_plot:
+        # 绘制音频波形图和时间频谱图在同一张图上
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+        librosa.display.waveshow(x, sr=sample_rate, ax=ax1)
+        ax1.set_title('Waveform')
+        librosa.display.specshow(librosa.amplitude_to_db(np.abs(librosa.stft(x)), ref=np.max),
+                                 sr=sample_rate, x_axis='time', y_axis='log', ax=ax2)
+        ax2.set_title('Spectrogram')
+        plt.tight_layout()
+        plt.show()
+    return x
+
+
+def judge_spoof(model, audio_data, device):
+    tensor_data = Tensor(audio_data)
     # # 打印输入数据的shape
     # print('audio_data.shape:',tensor_data.shape)
     
@@ -110,12 +112,12 @@ if __name__ == "__main__":
         print(f'Error: Audio file {args.audio_path} does not exist')
         exit(1)
         
-    audio_data, sr = load_audio(args.audio_path)
+    audio_data = load_audio(args.audio_path)
     print(f'Audio loaded!')
     
     # Judge spoof
     print('Analyzing audio...')
-    prediction, spoof_prob = judge_spoof(model, audio_data,sr, device)
+    prediction, spoof_prob = judge_spoof(model, audio_data, device)
     
     # Output result
     result_text = "bonafide" if prediction == 1 else "spoof"
