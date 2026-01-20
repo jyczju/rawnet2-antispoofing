@@ -10,7 +10,7 @@ from spoof_judge import load_audio, judge_spoof, load_model
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Judge if an audio is spoof or bonafide')
-    parser.add_argument('--audio_path', type=str, default='database/mydata/VoxCeleb1/attacker_audio/',
+    parser.add_argument('--audio_path', type=str, default='database/mydata/volunteer/orig_audio/',
                         help='Path to the audio file to evaluate')
     parser.add_argument('--model_path', type=str, default='models/model_logical_CCE_100_16_0.0001/best.pth',
                         help='Path to the trained model')
@@ -55,7 +55,8 @@ if __name__ == "__main__":
             print(f"File: {file}, No number found")
 
         # 循环100次，记录平均Spoof probability
-        for i in tqdm(range(100)):
+        # for i in tqdm(range(100)):
+        for i in tqdm(range(143)):
             # Load audio
             if args.atk:
                 audio_data = load_audio(args.audio_path + file, atk_amp=atk_amps[number - 1],

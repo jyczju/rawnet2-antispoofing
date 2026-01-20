@@ -44,7 +44,11 @@ def load_model(model_path, config_path, device):
 
 def load_audio(audio_path, atk_amp=None, atk_f=None, show_plot=True):
     data, sample_rate = sf.read(audio_path)
-    # print('samplerate:',samplerate)
+    # print('sample_rate:',sample_rate)
+    # print('data.shape:',data.shape)
+    # 如果是双通道，取左声道
+    if len(data.shape) == 2 and data.shape[1] == 2:
+        data = data[:, 0]
     # Apply transforms
     x = pad(data, sample_rate)
 
