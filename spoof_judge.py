@@ -21,7 +21,6 @@ def pad(x, sample_rate, max_len=64600, atk_amp=None, atk_f=None, show_plot=True)
         x = np.tile(x, (1, num_repeats))[:, :max_len][0]
 
 
-    
     return x
 
 
